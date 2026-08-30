@@ -1,0 +1,13 @@
+torch
+mne
+braindecode
+moabb
+mne-lsl
+pyriemann
+pandas
+matplotlib
+seaborn
+scikit-learn
+jupyterlab
+ipykernel
+pytest
