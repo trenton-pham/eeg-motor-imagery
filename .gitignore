@@ -4,4 +4,6 @@ docs/
 data/processed/
 .ipynb_checkpoints/
 __pycache__/
+mne_result/
+.audit/
 *.pyc

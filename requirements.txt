@@ -11,3 +11,4 @@ scikit-learn
 jupyterlab
 ipykernel
 pytest
+threadpoolctl
