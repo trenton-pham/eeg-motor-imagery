@@ -233,6 +233,8 @@ def load_dataset(files: list[Path] | None = None) -> LoadedDataset:
     """Load all intended runs with channel and trial QC tables."""
     if files is None:
         files = get_files()
+    if not files:
+        raise ValueError("No EEG recordings found; run loader.py to download data first")
     results = [_make_epochs_with_qc(path) for path in sorted(files)]
     return LoadedDataset(
         mne.concatenate_epochs([result.epochs for result in results]),
@@ -250,10 +252,6 @@ def load_epochs(files: list[Path] | None = None) -> mne.Epochs:
 def save_qc(dataset: LoadedDataset, files: list[Path], qc_dir: Path = QC_DIR) -> pd.DataFrame:
     """Save QC tables, preprocessing settings, and source file hashes."""
     qc_dir = Path(qc_dir)
-    qc_dir.mkdir(parents=True, exist_ok=True)
-    dataset.channel_qc.to_csv(qc_dir / "channels.csv", index=False)
-    dataset.trial_qc.to_csv(qc_dir / "trials.csv", index=False)
-    dataset.ica_qc.to_csv(qc_dir / "ica.csv", index=False)
     summary = dataset.trial_qc.groupby(
         ["subject", "run", "condition"], as_index=False
     ).agg(total=("kept", "size"), kept=("kept", "sum"))
@@ -262,7 +260,6 @@ def save_qc(dataset: LoadedDataset, files: list[Path], qc_dir: Path = QC_DIR) ->
         (summary["kept"] < MIN_KEPT_PER_CLASS)
         | (summary["rejected"] / summary["total"] > MAX_REJECTION_FRACTION)
     )
-    summary.to_csv(qc_dir / "summary.csv", index=False)
     hashes = {}
     for path in files:
         path = Path(path)
@@ -284,7 +281,14 @@ def save_qc(dataset: LoadedDataset, files: list[Path], qc_dir: Path = QC_DIR) ->
         "max_rejection_fraction_per_class": MAX_REJECTION_FRACTION,
         "source_sha256": hashes,
     }
-    (qc_dir / "policy.json").write_text(json.dumps(policy, indent=2) + "\n")
+    policy_json = json.dumps(policy, indent=2) + "\n"
+    qc_dir.mkdir(parents=True, exist_ok=True)
+    # shortcut: QC files publish separately; use a versioned export if crash recovery is required.
+    dataset.channel_qc.to_csv(qc_dir / "channels.csv", index=False)
+    dataset.trial_qc.to_csv(qc_dir / "trials.csv", index=False)
+    dataset.ica_qc.to_csv(qc_dir / "ica.csv", index=False)
+    summary.to_csv(qc_dir / "summary.csv", index=False)
+    (qc_dir / "policy.json").write_text(policy_json)
     return summary
 
 

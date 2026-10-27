@@ -13,7 +13,10 @@ RUNS = (4, 8, 12)
 def get_files(data_root: Path = DATA_ROOT) -> list[Path]:
     """Find downloaded recordings for the selected subjects and runs."""
     names = {f"S{subject:03d}R{run:02d}.edf" for subject in SUBJECTS for run in RUNS}
-    return sorted(path for path in Path(data_root).rglob("*.edf") if path.name in names)
+    files = sorted(path for path in Path(data_root).rglob("*.edf") if path.name in names)
+    if len({path.name for path in files}) != len(files):
+        raise ValueError("Duplicate recording filenames in data root")
+    return files
 
 
 def download_data(data_root: Path = DATA_ROOT) -> list[Path]:
