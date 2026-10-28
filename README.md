@@ -37,4 +37,6 @@ EEG is saved only from 0.5 to 3.5 seconds after each retained cue. Rest, rejecte
 ### References
 - <a href="https://mne.tools/stable/index.html">MNE Documentation</a>
 - <a href="https://medium.com/@hirok4/theory-and-implementation-of-csp-common-spatial-pattern-algorithm-f84300e3b4d6">Theory and Implementation of CSP Algorithm</a>
+- <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856895/">Convolutional Neural Network Architectures for EEG Feature Extraction</a>
+- <a href="https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2012.00039/full">Filter Bank Common Spatial Pattern Algorithm</a>
 - Codex/ChatGPT
