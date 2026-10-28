@@ -22,9 +22,19 @@ The manifest records recording hashes, header metadata, class counts, exclusions
 
 Regenerate QC after changing preprocessing before creating a new split. Source-hash checks do not validate later edits to `clean.py`.
 
+### Prepare the demo inputs
+
+Run `python demo_data.py` after freezing the split. Use `--split path/to/split.json` and `--out path/to/prepared` when the recordings or output live in another checkout.
+
+The exporter checks the frozen source hashes and subject groups, repeats the existing cleaning pipeline for the selected recordings, and refuses an existing output directory. It publishes `demo_artifacts/prepared` only after validation and saving succeed.
+
+- `epochs-epo.fif` stores retained EEG windows in volts with channel information and training or replay membership. Load it with `mne.read_epochs()` and use `get_data()` for model inputs.
+- `trials.csv` stores every selected trial, including rejected trials, with its original run-relative cue time and a nullable `epoch_index` linking kept trials to the saved EEG.
+- `metadata.json` records source membership, units, sample rate, window bounds, versions, warnings, and separate preprocessing and dataset identities. `qc/` stores fresh QC reports, and `split.json` copies the frozen split.
+
+EEG is saved only from 0.5 to 3.5 seconds after each retained cue. Rest, rejected trials, and samples outside these windows remain gaps. Whole-recording cleaning makes this an offline replay dataset, not a causal stream or untouched evaluation set. No model is trained in this step.
+
 ### References
 - <a href="https://mne.tools/stable/index.html">MNE Documentation</a>
 - <a href="https://medium.com/@hirok4/theory-and-implementation-of-csp-common-spatial-pattern-algorithm-f84300e3b4d6">Theory and Implementation of CSP Algorithm</a>
-- <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10856895/">Convolutional Neural Network Architectures for EEG Feature Extraction</a>
-- <a href="https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2012.00039/full">Filter Bank Common Spatial Pattern Algorithm</a>
 - Codex/ChatGPT

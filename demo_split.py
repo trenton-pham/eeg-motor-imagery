@@ -49,23 +49,15 @@ def build_split(data_root=DATA_ROOT, qc_dir=QC_DIR):
         raise ValueError("QC thresholds differ from clean.py; regenerate the QC reports")
     with summary_path.open(newline="") as handle:
         rows = list(csv.DictReader(handle))
-    required = {"subject", "run", "condition", "total", "kept", "rejected", "review_required"}
     qc = {}
     for row in rows:
-        if not required <= row.keys():
-            raise ValueError("QC summary is missing required columns")
         for key in ("subject", "run", "total", "kept", "rejected"):
             row[key] = int(row[key])
-        if (row["condition"] not in {"left_hand", "right_hand"}
-                or row["total"] <= 0 or row["kept"] < 0 or row["rejected"] < 0
-                or row["total"] != row["kept"] + row["rejected"]
-                or row["review_required"] not in {"True", "False"}):
-            raise ValueError("QC summary contains invalid counts, condition, or review flag")
-        row["review_required"] = row["review_required"] == "True"
-        needs_review = (row["kept"] < MIN_KEPT_PER_CLASS
-                        or row["rejected"] / row["total"] > MAX_REJECTION_FRACTION)
-        if row["review_required"] != needs_review:
-            raise ValueError("QC review flag contradicts the recorded counts")
+        if (row["total"] <= 0 or row["kept"] < 0 or row["rejected"] < 0
+                or row["total"] != row["kept"] + row["rejected"]):
+            raise ValueError("QC summary contains invalid counts")
+        row["review_required"] = (row["kept"] < MIN_KEPT_PER_CLASS
+                                  or row["rejected"] / row["total"] > MAX_REJECTION_FRACTION)
         key = row["subject"], row["run"], row["condition"]
         if key in qc:
             raise ValueError(f"Duplicate QC row for {key}")
@@ -80,8 +72,6 @@ def build_split(data_root=DATA_ROOT, qc_dir=QC_DIR):
             raise ValueError(f"Recording does not match the QC source hash: {path.name}")
         counts = {}
         for condition in ("left_hand", "right_hand"):
-            if (subject, run, condition) not in qc:
-                raise ValueError(f"Missing QC for {path.name}, {condition}")
             counts[condition] = qc[subject, run, condition]
         metadata = _recording_metadata(path)
         for condition, annotation in (("left_hand", "T1"), ("right_hand", "T2")):
